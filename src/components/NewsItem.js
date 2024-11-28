@@ -7,7 +7,9 @@ export class NewsItem extends Component {
       <div>
         {/* {console.log(description)} */}
         <div className="card">
-          <span className="position-absolute top-0 translate-middle badge rounded-pill bg-danger" style={{zIndex: 1, left: '90%'}}>{source}</span>
+          <div>
+            <span className="badge rounded-pill bg-danger" style={{position: 'absolute', right: '0'}}>{source}</span>
+          </div>
           <img src={imgUrl != null ?imgUrl:"https://cdn.pixabay.com/photo/2017/06/26/19/03/news-2444778_1280.jpg"} className="card-img-top" alt="..." style={{height: 190}}/>
           <div className="card-body">
               <h5 className="card-title">{title}...</h5>
