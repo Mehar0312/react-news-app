@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import NewsItem from './NewsItem'
 import Spinner from './Spinner';
 import PropTypes from 'prop-types'
-
+import InfiniteScroll from "react-infinite-scroll-component";
 
 export class News extends Component {
   static defaultProps = {
@@ -22,7 +22,8 @@ export class News extends Component {
     this.state = {
       articles: [],
       loading: false,
-      page: 1
+      page: 1,
+      totalResults: 0
     }
     document.title = `${this.capitalizeFirstLetter(this.props.category)} - NewMonkey`;
   }
@@ -48,50 +49,51 @@ export class News extends Component {
     this.updateNewsOnClick(newPage);
   }
 
-  handlePrevClick = async () => {
-    const newPage = this.state.page - 1;
-    this.setState({page: newPage});
-    this.updateNewsOnClick(newPage);
-  }
-
-  handleNextClick = async () => {
+  fetchMoreData = async () => {
     const newPage = this.state.page + 1;
     this.setState({page: newPage});
-    this.updateNewsOnClick(newPage);
-  } 
+    const url = `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=df28a757cd0c4a3eb8027e2bb021a1ed&page=${newPage}&pageSize=${this.props.pageSize}`;
+    let data = await fetch(url);
+    let parsedData = await data.json();
+    setTimeout(() => {
+      this.setState({
+        articles: this.state.articles.concat(parsedData.articles), 
+        totalResults: parsedData.totalResults
+      });
+    }, 500);    
+  };
 
   render() {
     return (
-      <div className='container mb-4'>
+      <>
         <h2 className="text-center">New Monkey - Top {this.capitalizeFirstLetter(this.props.category)} headlines</h2>
         {this.state.loading && <Spinner/>} 
-        <div className="row my-3">
-          {!this.state.loading && this.state.articles.map((element) => {           
-            return (
-            <div className="col-md-4 my-3" key={element.url}>
-              <NewsItem 
-                title={element.title?element.title.slice(0,45):""} 
-                description={element.description?element.description.slice(0,88):""} 
-                imgUrl={element.urlToImage} 
-                newsUrl={element.url}
-                author={element.author}
-                date={element.publishedAt}
-                source={element.source.name}
-              />
-            </div>); 
-          })}
-        </div>
-        <div className="row">
-          <div className="col-md-3"></div>
-          <div className="col-md-6">
-            <div className="container d-flex justify-content-between">
-              <button type="button" className="btn btn-light" onClick={this.handlePrevClick} disabled={this.state.page <= 1}>&larr;Previous</button>
-              <button type="button" className="btn btn-light" onClick={this.handleNextClick} disabled={this.state.page + 1 > Math.ceil(this.state.totalResults/this.props.pageSize)}>Next&rarr;</button>
+        <InfiniteScroll
+          dataLength={this.state.articles.length}
+          next={this.fetchMoreData}
+          hasMore={this.state.articles.length !== this.state.totalResults}
+          loader={<Spinner/>}
+        >
+          <div className='container mb-4'>
+            <div className="row my-3">
+              {this.state.articles.map((element) => {           
+                return (
+                <div className="col-md-4 my-3" key={element.url}>
+                  <NewsItem 
+                    title={element.title?element.title.slice(0,45):""} 
+                    description={element.description?element.description.slice(0,88):""} 
+                    imgUrl={element.urlToImage} 
+                    newsUrl={element.url}
+                    author={element.author}
+                    date={element.publishedAt}
+                    source={element.source.name}
+                  />
+                </div>); 
+              })}
             </div>
           </div>
-          <div className="col-md-3"></div> 
-        </div>
-      </div>
+        </InfiniteScroll>
+      </>
     )
   }
 }

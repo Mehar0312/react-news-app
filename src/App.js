@@ -11,7 +11,7 @@ import {
 } from "react-router-dom";
 
 export class App extends Component {
-  pageSize = 6;
+  pageSize = 12;
   country = 'us';
   render() {
     return (
